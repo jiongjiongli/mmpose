@@ -48,15 +48,36 @@ def merge_data_samples(data_samples: List[PoseDataSample]) -> PoseDataSample:
 
     if 'pred_fields' in data_samples[0] and 'heatmaps' in data_samples[
             0].pred_fields:
-        reverted_heatmaps = [
-            revert_heatmap(data_sample.pred_fields.heatmaps,
-                           data_sample.gt_instances.bbox_centers,
-                           data_sample.gt_instances.bbox_scales,
-                           data_sample.ori_shape)
-            for data_sample in data_samples
-        ]
 
-        merged_heatmaps = np.max(reverted_heatmaps, axis=0)
+        # =====================================================================
+        # Fix bug: demo/topdown_demo_with_mmdet.py with input data/test/multi-person.jpeg
+        # crash because too many instances cause memory OOM:
+        # reverted_heatmaps = [
+        #     revert_heatmap(data_sample.pred_fields.heatmaps,
+        #                    data_sample.gt_instances.bbox_centers,
+        #                    data_sample.gt_instances.bbox_scales,
+        #                    data_sample.ori_shape)
+        #     for data_sample in data_samples
+        # ]
+
+        # merged_heatmaps = np.max(reverted_heatmaps, axis=0)
+
+        merged_heatmaps = None
+
+        for sample_index, data_sample in enumerate(data_samples):
+            # print('Processing:', sample_index, len(data_samples))
+
+            reverted_heatmap = revert_heatmap(data_sample.pred_fields.heatmaps,
+                               data_sample.gt_instances.bbox_centers,
+                               data_sample.gt_instances.bbox_scales,
+                               data_sample.ori_shape)
+
+            if merged_heatmaps is None:
+                merged_heatmaps = reverted_heatmap
+            else:
+                merged_heatmaps = np.maximum(merged_heatmaps, reverted_heatmap)
+        # =====================================================================
+
         pred_fields = PixelData()
         pred_fields.set_data(dict(heatmaps=merged_heatmaps))
         merged.pred_fields = pred_fields
