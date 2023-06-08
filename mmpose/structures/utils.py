@@ -68,9 +68,9 @@ def merge_data_samples(data_samples: List[PoseDataSample]) -> PoseDataSample:
             # print('Processing:', sample_index, len(data_samples))
 
             reverted_heatmap = revert_heatmap(data_sample.pred_fields.heatmaps,
-                               data_sample.gt_instances.bbox_centers,
-                               data_sample.gt_instances.bbox_scales,
-                               data_sample.ori_shape)
+                                              data_sample.gt_instances.bbox_centers,
+                                              data_sample.gt_instances.bbox_scales,
+                                              data_sample.ori_shape)
 
             if merged_heatmaps is None:
                 merged_heatmaps = reverted_heatmap
